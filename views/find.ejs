@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Found data</title>
+    <style>
+      * {
+        margin: auto auto;
+      }
+
+      h3 {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      table,
+      tr,
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid black;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      .directory {
+        background-color: rgb(3, 62, 3);
+      }
+
+      .directory .path {
+        color: gold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dirPaths">
+      <h3>
+        <%= (entries[0].path).substring(0, (entries[0].path).length -
+        (entries[0].name).length) %>
+      </h3>
+    </div>
+    <table>
+      <tr id="tablerow">
+        <th><p>Filename</p></th>
+        <th><p>Filesize</p></th>
+        <th><p>Filetype</p></th>
+        <th><p>Filepath</p></th>
+      </tr>
+
+      <% entries.forEach(element => { %>
+      <tr class="<%=element.type%>">
+        <td><%=element.name%></td>
+        <td><%=element.size%> kb</td>
+        <td><%=element.type%></td>
+        <td class="path"><%=element.path%></td>
+      </tr>
+      <% }) %>
+    </table>
+  </body>
+</html>
