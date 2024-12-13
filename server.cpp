@@ -27,18 +27,18 @@ int findLast(const string& str) {
     return lastSlash;
 }
 
-string emptyDirectory()
+string emptyDirectory(string inp)
 {
     int counter = 0;
     string ret = "";
-    fileInfo file = {"", 0, "", ""};
+    fileInfo file = {inp, 0, "", ""};
     return convertToJSON(file) + "COUNT:" + to_string(counter);
 }
 
 string listDirectories(string dir)
 {
     if (filesystem::is_empty(dir)) {
-        return emptyDirectory();
+        return emptyDirectory("");
     }
     
     int counter = 1;
@@ -95,16 +95,23 @@ int main(int argc, char* argv[])
 
     // get request for modified path 
     // #TODO: check for permission
-    server.Get(R"(/list(/.*)?)", [&counter, &baseDir](const httplib::Request& req, httplib::Response& res) {
+    server.Get(R"(/list(.*))", [&counter, &baseDir](const httplib::Request& req, httplib::Response& res) 
+    {
     cout << "Request for connection sent" << endl;
-    if (!req.matches.empty()) {
-        cout << "Matched path: " << req.matches[1] << endl;
-    } else {
-        cout << "No matches found!" << endl;
-    }
 
     string pathParam = req.matches[1];
-    string fullPath = baseDir + pathParam;
+    if (!pathParam.empty() && pathParam[0] == '/') {
+        pathParam.erase(0, 1); 
+    }
+
+    string fullPath = baseDir + "/" + pathParam;
+    cout << "Resolved fullPath: " << fullPath << endl;
+
+    if (!filesystem::exists(fullPath)) {
+        cerr << "Error: Path does not exist - " << fullPath << endl;
+        res.set_content(emptyDirectory("not found"), "application/json");
+        return;
+    }
 
     counter++;
     cout << "Accessing: " << fullPath << endl;

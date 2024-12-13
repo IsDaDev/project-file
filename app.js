@@ -1,3 +1,4 @@
+const { match } = require("assert");
 const express = require("express");
 const path = require("path");
 const port = 3000;
@@ -43,8 +44,6 @@ const handleData = async (fpath) => {
     return JSON.parse(cl);
   });
 
-  console.log(matches);
-
   sortArray(matches);
 
   return { entries: matches, dataCount: dataCount, path: fpath };
@@ -74,14 +73,17 @@ app.get("/list", async (req, res) => {
   }
 });
 
-app.get("/list/:path", async (req, res) => {
+app.get("/list/:path*", async (req, res) => {
   try {
-    let paramsPath;
-    const { entries, dataCount, path } = await handleData(paramsPath);
+    const fullPath = `/list/${req.params.path}${req.params[0] || ""}`;
+    const { entries, dataCount, path } = await handleData(fullPath);
+    if (entries[0]["name"] == "not found") {
+      res.render("404", { dir: path });
+    }
     res.render("find", { entries, dataCount, path });
   } catch (error) {
     let errorMsg = "Error retrieving data for path: " + req.params.path;
-    console.error(errorMsg);
+    console.error(errorMsg, error);
     res.status(500).send(errorMsg);
   }
 });

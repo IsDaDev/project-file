@@ -50,7 +50,12 @@
 
       <% entries.forEach(element => { %>
       <tr class="<%=element.type%>">
-        <td><a href="<%=path + "/" + element.name%>"><%=element.name%></a></td>
+        <% if (element.type == "directory") { %>
+          <td><a href="<%=path + "/" + element.name%>"><%=element.name%></a></td>
+        <% } else { %>
+          <td><p><%=element.name%></p></td>
+        <% }%>
+        
         <td><%=element.size%> kb</td>
         <td><%=element.type%></td>
         <td class="path"><%=element.path%></td>
