@@ -23,6 +23,7 @@
       }
 
       table {
+        width: 90%;
         border-collapse: collapse;
       }
 
@@ -37,10 +38,7 @@
   </head>
   <body>
     <div class="dirPaths">
-      <h3>
-        <%= (entries[0].path).substring(0, (entries[0].path).length -
-        (entries[0].name).length) %>
-      </h3>
+      <h3><%= path %></h3>
     </div>
     <table>
       <tr id="tablerow">
@@ -52,7 +50,7 @@
 
       <% entries.forEach(element => { %>
       <tr class="<%=element.type%>">
-        <td><%=element.name%></td>
+        <td><a href="<%=path + "/" + element.name%>"><%=element.name%></a></td>
         <td><%=element.size%> kb</td>
         <td><%=element.type%></td>
         <td class="path"><%=element.path%></td>

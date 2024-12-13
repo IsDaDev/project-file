@@ -1,15 +1,53 @@
-const { match } = require("assert");
 const express = require("express");
-const { request } = require("http");
 const path = require("path");
-const { Database } = require("sqlite3");
 const port = 3000;
 const serverIP = "http://127.0.0.1:8000";
 
 const fetchData = async (path) => {
   let fullPath = serverIP + path;
-  let data = await fetch(fullPath);
-  return data.text();
+  console.log("Fetching from: ", fullPath);
+  let response = await fetch(fullPath);
+
+  if (!response.ok) {
+    console.error(`Failed to fetch: ${response.statusText}`);
+    throw new Error(`HTTP Error ${response.status}`);
+  }
+
+  return response.text();
+};
+
+const sortArray = (array) => {
+  array.sort((a, b) => {
+    if (a.type < b.type) return -1;
+    if (a.type > b.type) return 1;
+    return 0;
+  });
+};
+
+const handleData = async (fpath) => {
+  let data = await fetchData(fpath);
+
+  if (!data) {
+    throw new Error("Error fetching data");
+  }
+
+  let dataCount = data.substring(data.length - 7);
+  let matches = data.match(/{.*?}/g);
+
+  if (!matches) {
+    return { entries: matches, dataCount: dataCount, path: fpath };
+  }
+
+  matches = matches.map((dataset) => {
+    let cl = dataset.replaceAll("'", '"');
+    return JSON.parse(cl);
+  });
+
+  console.log(matches);
+
+  sortArray(matches);
+
+  return { entries: matches, dataCount: dataCount, path: fpath };
 };
 
 const app = express();
@@ -28,26 +66,22 @@ app.get("/", (req, res) => {
 
 app.get("/list", async (req, res) => {
   try {
-    let data = await fetchData(req.path);
-    let dataCount = data.substring(data.length - 7);
-    let matches = data.match(/{.*?}/g);
-
-    matches = matches.map((dataset) => {
-      let cl = dataset.replaceAll("'", '"');
-      return JSON.parse(cl);
-    });
-
-    matches.sort((a, b) => {
-      if (a.type < b.type) return -1;
-      if (a.type > b.type) return 1;
-      return 0;
-    });
-
-    console.log(matches);
-
-    res.render("find", { entries: matches, dataCount: dataCount });
+    const { entries, dataCount, path } = await handleData(req.path);
+    res.render("find", { entries, dataCount, path });
   } catch (error) {
     console.log("Error: ", error);
     res.send("Error retrieving data");
+  }
+});
+
+app.get("/list/:path", async (req, res) => {
+  try {
+    let paramsPath;
+    const { entries, dataCount, path } = await handleData(paramsPath);
+    res.render("find", { entries, dataCount, path });
+  } catch (error) {
+    let errorMsg = "Error retrieving data for path: " + req.params.path;
+    console.error(errorMsg);
+    res.status(500).send(errorMsg);
   }
 });
