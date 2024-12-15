@@ -2,51 +2,7 @@ const express = require("express");
 const path = require("path");
 const port = 3000;
 const serverIP = "http://127.0.0.1:8000";
-
-const fetchData = async (path) => {
-  let fullPath = serverIP + path;
-  console.log("Fetching from: ", fullPath);
-  let response = await fetch(fullPath);
-
-  if (!response.ok) {
-    console.error(`Failed to fetch: ${response.statusText}`);
-    throw new Error(`HTTP Error ${response.status}`);
-  }
-
-  return response.text();
-};
-
-const sortArray = (array) => {
-  array.sort((a, b) => {
-    if (a.type < b.type) return -1;
-    if (a.type > b.type) return 1;
-    return 0;
-  });
-};
-
-const handleData = async (fpath) => {
-  let data = await fetchData(fpath);
-
-  if (!data) {
-    throw new Error("Error fetching data");
-  }
-
-  let dataCount = data.substring(data.length - 7);
-  let matches = data.match(/{.*?}/g);
-
-  if (!matches) {
-    return { entries: matches, dataCount: dataCount, path: fpath };
-  }
-
-  matches = matches.map((dataset) => {
-    let cl = dataset.replaceAll("'", '"');
-    return JSON.parse(cl);
-  });
-
-  sortArray(matches);
-
-  return { entries: matches, dataCount: dataCount, path: fpath };
-};
+const { handleData, dataplaneFormatting } = require("./functions.js");
 
 const app = express();
 
@@ -72,8 +28,7 @@ app.get("/", (req, res) => {
 
 app.get("/list", async (req, res) => {
   try {
-    const { entries, dataCount, path } = await handleData(req.path);
-    console.log(entries);
+    const { entries, dataCount, path } = await handleData(req.path, serverIP);
     res.render("find", { entries, dataCount, path });
   } catch (error) {
     console.log("Error: ", error);
@@ -84,13 +39,16 @@ app.get("/list", async (req, res) => {
 app.get("/list/:path*", async (req, res) => {
   try {
     const fullPath = `/list/${req.params.path}${req.params[0] || ""}`;
-    const { entries, dataCount, path } = await handleData(fullPath);
+    const { entries, dataCount, path } = await handleData(fullPath, serverIP);
 
     if (entries[0]["name"] == "not found") {
       res.render("404", { dir: path });
+    } else if (entries[0].flag == 1) {
+      const { name, size, content } = dataplaneFormatting(entries);
+      res.render("dataplane", { name, size, content, path });
+    } else {
+      res.render("find", { entries, dataCount, path });
     }
-
-    res.render("find", { entries, dataCount, path });
   } catch (error) {
     let errorMsg = "Error retrieving data for path: " + req.params.path;
     console.error(errorMsg, error);

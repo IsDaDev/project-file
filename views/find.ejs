@@ -45,6 +45,7 @@
         <th><p>Filename</p></th>
         <th><p>Filesize</p></th>
         <th><p>Filetype</p></th>
+        <!-- <th><p>Content</p></th> -->
         <th><p>Filepath</p></th>
       </tr>
 
@@ -53,6 +54,7 @@
         <td><a href="<%=path + "/" + element.name%>"><%=element.name%></a></td>
         <td><%=element.size%> kb</td>
         <td><%=element.type%></td>
+        <!-- <td><%=element.content%></td> -->
         <td class="path"><%=element.path%></td>
       </tr>
       <% }) %>
