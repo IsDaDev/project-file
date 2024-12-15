@@ -27,6 +27,35 @@ int findLast(const string& str) {
     return lastSlash;
 }
 
+// bool isNotBinary(string path)
+// {
+//     ifstream file(path, ios::binary);
+//     char ch;
+//     while (file.get(ch)) {
+//         if (ch == '\0') {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+
+// string readFile(string filepath) 
+// {
+//     if (isNotBinary(filepath)) {
+//         ifstream inputStream(filepath);
+//         string data = "";
+//         string line;
+
+//         while(getline(inputStream, line)) {
+//             data = data + line + "\n";
+//         }
+
+//         return data;
+//     } else {
+//         return "binary file";
+//     }
+// }
+
 string emptyDirectory(string inp)
 {
     int counter = 0;
@@ -64,24 +93,6 @@ string listDirectories(string dir)
     string returnString = ret + "COUNT:" + to_string(counter);
 
     return returnString;
-}
-
-vector<string> returnFileContent(string filepath) 
-{
-    ifstream inputStream(filepath);
-    vector<string> data;
-    string line;
-
-    while(getline(inputStream, line)) {
-        data.push_back(line);
-    }
-
-    if (!inputStream) {
-        data.push_back("error opening file");
-        return data;
-    }
-
-    return data;
 }
 
 int main(int argc, char* argv[]) 
