@@ -7,7 +7,8 @@
 
 using namespace std;
 
-struct fileInfo {
+struct fileInfo 
+{
     string name;
     double fSize; // File size in KB
     string type;  // "file" or "directory"
@@ -16,7 +17,8 @@ struct fileInfo {
     int flag;
 };
 
-string convertToJSON(const fileInfo& file) {
+string convertToJSON(const fileInfo& file) 
+{
     nlohmann::json j;
     j["name"] = file.name;
     j["size"] = file.fSize;
@@ -27,12 +29,14 @@ string convertToJSON(const fileInfo& file) {
     return j.dump();
 }
 
-int findLast(const string& str) {
+int findLast(const string& str) 
+{
     size_t lastSlash = str.find_last_of('/');
     return lastSlash;
 }
 
-string returnFileContent(string filepath) {
+string returnFileContent(string filepath) 
+{
     ifstream inputStream(filepath);
     string data = "";
     string line;
@@ -124,36 +128,52 @@ int main(int argc, char* argv[])
     httplib::Server server;
 
     // get request for modified path 
-    // #TODO: check for permission
     server.Get(R"(/list(.*))", [&counter, &baseDir](const httplib::Request& req, httplib::Response& res) 
     {
-    cout << "Request for connection sent" << endl;
+        cout << "Request for connection sent" << endl;
 
-    string pathParam = req.matches[1];
-    if (!pathParam.empty() && pathParam[0] == '/') {
-        pathParam.erase(0, 1); 
+        string pathParam = req.matches[1];
+        if (!pathParam.empty() && pathParam[0] == '/') {
+            pathParam.erase(0, 1); 
+        }
+
+        string fullPath = baseDir + "/" + pathParam;
+        cout << "GET_REQUEST: " << fullPath << endl;
+
+        if (!filesystem::exists(fullPath)) {
+            cerr << "Error: Path does not exist - " << fullPath << endl;
+            res.set_content(emptyDirectory("not found"), "application/json");
+            return;
+        }
+
+        if (filesystem::is_regular_file(fullPath)) {
+            res.set_content(getFile(fullPath), "application/json");
+            return;
+        }
+
+        counter++;
+        cout << "Accessing: " << fullPath << endl;
+        cout << "Connections: " << counter << endl;
+
+        res.set_content(listDirectories(fullPath), "application/json");
+    });
+
+    server.POST(R"(/list(.*))", [&counter, &baseDir](const httplib::Request& req, httplib::Response& res))
+    {
+        string pathParam = req.matches[1];
+        if (!pathParam.empty() && pathParam[0] == '/') {
+            pathParam.erase(0, 1); 
+        }
+
+        string fullPath = baseDir + "/" + pathParam;
+        cout << "POST_REQUEST: " << fullPath << endl;
+
+        if (!filesystem::exists(fullPath)) {
+            cerr << "Error: Path does not exist - " << fullPath << endl;
+            res.set_content(emptyDirectory("not found"), "application/json");
+            return;
+        }
     }
-
-    string fullPath = baseDir + "/" + pathParam;
-    cout << "Resolved fullPath: " << fullPath << endl;
-
-    if (!filesystem::exists(fullPath)) {
-        cerr << "Error: Path does not exist - " << fullPath << endl;
-        res.set_content(emptyDirectory("not found"), "application/json");
-        return;
-    }
-
-    if (filesystem::is_regular_file(fullPath)) {
-        res.set_content(getFile(fullPath), "application/json");
-        return;
-    }
-
-    counter++;
-    cout << "Accessing: " << fullPath << endl;
-    cout << "Connections: " << counter << endl;
-
-    res.set_content(listDirectories(fullPath), "application/json");
-});
 
     server.listen("127.0.0.1", 8000);
 
